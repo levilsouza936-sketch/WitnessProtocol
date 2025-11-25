@@ -43,24 +43,6 @@ export default function Home() {
   const [selectedPhoto, setSelectedPhoto] = useState<EvidencePhoto | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    fetchConfig();
-    fetchPhotos();
-    fetchComments();
-    subscribeToComments();
-  }, []);
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [comments]);
-
-  // Set initial selected photo when photos load
-  useEffect(() => {
-    if (photos.length > 0 && !selectedPhoto) {
-      setSelectedPhoto(photos[0]);
-    }
-  }, [photos, selectedPhoto]);
-
   const fetchConfig = async () => {
     const { data } = await supabase.from('leaks_config').select('*').single();
     if (data) setConfig(data);
@@ -104,6 +86,17 @@ export default function Home() {
       setNewComment('');
     }
   };
+
+  useEffect(() => {
+    fetchConfig();
+    fetchPhotos();
+    fetchComments();
+    subscribeToComments();
+  }, []);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [comments]);
 
   // Determine display content (NO FALLBACK to config)
   const displayTitle = selectedPhoto?.title || "SYSTEM OFFLINE";

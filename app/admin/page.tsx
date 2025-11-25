@@ -4,6 +4,17 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Lock, Upload, Save, Trash2 } from 'lucide-react';
 
+type EvidencePhoto = {
+    id: number;
+    url: string;
+    caption: string;
+    title?: string;
+    description?: string;
+    gallery?: string[];
+    video_url?: string;
+    created_at: string;
+};
+
 export default function AdminPage() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState('');
@@ -20,14 +31,7 @@ export default function AdminPage() {
     const [photoTitle, setPhotoTitle] = useState('');
     const [photoDescription, setPhotoDescription] = useState('');
     const [extraPhotos, setExtraPhotos] = useState('');
-    const [photos, setPhotos] = useState<any[]>([]);
-
-    useEffect(() => {
-        if (isAuthenticated) {
-            fetchConfig();
-            fetchPhotos();
-        }
-    }, [isAuthenticated]);
+    const [photos, setPhotos] = useState<EvidencePhoto[]>([]);
 
     const checkAuth = () => {
         if (password === 'WITNESS_ADMIN' || password === process.env.NEXT_PUBLIC_ADMIN_PASS) {
@@ -50,6 +54,13 @@ export default function AdminPage() {
         const { data } = await supabase.from('evidence_photos').select('*').order('created_at', { ascending: false });
         if (data) setPhotos(data);
     };
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchConfig();
+            fetchPhotos();
+        }
+    }, [isAuthenticated]);
 
     const handleUpdateConfig = async () => {
         const { error } = await supabase.from('leaks_config').upsert({
@@ -98,7 +109,7 @@ export default function AdminPage() {
         }
     };
 
-    const handleEditPhoto = (photo: any) => {
+    const handleEditPhoto = (photo: EvidencePhoto) => {
         setEditingId(photo.id);
         setPhotoUrl(photo.url || '');
         setPostVideoUrl(photo.video_url || '');
