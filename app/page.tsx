@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import WitnessLogo from '@/components/WitnessLogo';
 import { supabase } from '@/lib/supabase';
-import { MessageSquare, Radio, Send, X } from 'lucide-react';
+import { MessageSquare, Radio, Send, X, Eye, Users } from 'lucide-react';
 
 // Types
 type LeaksConfig = {
@@ -42,6 +42,8 @@ export default function Home() {
   const [newComment, setNewComment] = useState('');
   const [isChatOpen, setIsChatOpen] = useState(false); // Mobile chat toggle
   const [selectedPhoto, setSelectedPhoto] = useState<EvidencePhoto | null>(null);
+  const [totalViews, setTotalViews] = useState(0);
+  const [onlineUsers, setOnlineUsers] = useState(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const fetchConfig = async () => {
@@ -88,11 +90,46 @@ export default function Home() {
     }
   };
 
+  const trackPageView = async () => {
+    const sessionId = 'USER-' + Math.random().toString(36).substring(7);
+    await supabase.from('page_views').insert({ session_id: sessionId });
+  };
+
+  const fetchViewCount = async () => {
+    const { count } = await supabase.from('page_views').select('*', { count: 'exact', head: true });
+    if (count !== null) setTotalViews(count);
+  };
+
+  const subscribeToPresence = () => {
+    const channel = supabase.channel('online-users', {
+      config: { presence: { key: 'user-' + Math.random() } }
+    });
+
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        setOnlineUsers(Object.keys(state).length);
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.track({ online_at: new Date().toISOString() });
+        }
+      });
+
+    return () => {
+      channel.unsubscribe();
+    };
+  };
+
   useEffect(() => {
     fetchConfig();
     fetchPhotos();
     fetchComments();
     subscribeToComments();
+    trackPageView();
+    fetchViewCount();
+    const unsubscribe = subscribeToPresence();
+    return unsubscribe;
   }, []);
 
   useEffect(() => {
@@ -104,12 +141,12 @@ export default function Home() {
   const displayDescription = selectedPhoto?.description || selectedPhoto?.caption || "No active signal detected. Waiting for incoming transmission...";
 
   // Combine main photo + gallery for the grid
-  const currentGallery:string[] = selectedPhoto ? [selectedPhoto.url, ...(selectedPhoto.gallery || [])] : [];
-        
-          return (
-            <div className="min-h-screen bg-void-black text-gray-200 font-sans selection:bg-neon-red selection:text-white pb-20">
-          
-          {/* Header / Navbar */}
+  const currentGallery: string[] = selectedPhoto ? [selectedPhoto.url, ...(selectedPhoto.gallery || [])] : [];
+
+  return (
+    <div className="min-h-screen bg-void-black text-gray-200 font-sans selection:bg-neon-red selection:text-white pb-20">
+
+      {/* Header / Navbar */}
       <header className="fixed top-0 w-full z-50 border-b border-white/10 bg-black/90 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -121,6 +158,20 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Analytics */}
+            <div className="hidden md:flex items-center gap-4 text-[10px] font-mono text-gray-500 uppercase tracking-wider">
+              <div className="flex items-center gap-1.5">
+                <Eye className="w-3.5 h-3.5 text-neon-red" />
+                <span className="text-white font-semibold">{totalViews.toLocaleString()}</span>
+                <span>views</span>
+              </div>
+              <span className="text-gray-700">|</span>
+              <div className="flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-green-500 animate-pulse" />
+                <span className="text-white font-semibold">{onlineUsers}</span>
+                <span>online</span>
+              </div>
+            </div>
             <div className="flex items-center gap-2 text-[10px] font-mono text-gray-500 uppercase tracking-wider">
               <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${selectedPhoto ? 'bg-green-500' : 'bg-red-500'}`}></span>
               <span className="hidden sm:inline">{selectedPhoto ? 'System Online' : 'System Offline'}</span>
@@ -131,25 +182,25 @@ export default function Home() {
               onClick={() => setIsChatOpen(!isChatOpen)}
             >
               {isChatOpen ? <X className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
-                 {!isChatOpen && <span className="absolute top-1 right-1 w-2 h-2 bg-neon-red rounded-full animate-ping" />}
+              {!isChatOpen && <span className="absolute top-1 right-1 w-2 h-2 bg-neon-red rounded-full animate-ping" />}
             </button>
           </div>
-            </div>
+        </div>
       </header>
-              
-              {/* Main Layout */}
+
+      {/* Main Layout */}
       <main className="pt-20 max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
 
-              {/* Left Column: Unified Case File (8 cols) */}
+        {/* Left Column: Unified Case File (8 cols) */}
         <div className="lg:col-span-8 space-y-6">
 
-              {/* Case File Card */}
+          {/* Case File Card */}
           <article className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden shadow-2xl shadow-neon-red/5">
 
             {/* Main Content (Photos) */}
             <div className="p-4 sm:p-6 pb-0">
               <div className="grid grid-cols-1 gap-4">
-              {/* Main Selected Photo (Large) */}
+                {/* Main Selected Photo (Large) */}
                 {selectedPhoto ? (
                   <div className="relative aspect-video w-full bg-black rounded-lg overflow-hidden border border-white/10 shadow-lg group">
                     {selectedPhoto.video_url ? (
@@ -181,7 +232,7 @@ export default function Home() {
                 ) : (
                   <div className="aspect-video w-full bg-black/50 flex items-center justify-center border border-dashed border-white/10 rounded-lg">
                     <div className="text-center">
-                    <Radio className="w-12 h-12 text-gray-700 mx-auto mb-2" />
+                      <Radio className="w-12 h-12 text-gray-700 mx-auto mb-2" />
                       <p className="text-gray-500 font-mono text-sm">NO SIGNAL ACQUIRED</p>
                     </div>
                   </div>
@@ -192,7 +243,7 @@ export default function Home() {
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                     {currentGallery.map((url, idx) => (
                       <div key={idx} className="aspect-square rounded overflow-hidden border border-white/10 hover:border-neon-red/50 transition-all cursor-pointer">
-                      <img src={url} alt="" className="w-full h-full object-cover" />
+                        <img src={url} alt="" className="w-full h-full object-cover" />
                       </div>
                     ))}
                   </div>
