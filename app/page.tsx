@@ -31,6 +31,7 @@ type Comment = {
 };
 
 export default function Home() {
+  // System operational - Signal established
   const [config, setConfig] = useState<LeaksConfig>({
     title: "LOADING SIGNAL...",
     description: "Establishing secure connection to the void.",
@@ -130,9 +131,9 @@ export default function Home() {
               onClick={() => setIsChatOpen(!isChatOpen)}
             >
               {isChatOpen ? <X className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
-                    {!isChatOpen && <span className="absolute top-1 right-1 w-2 h-2 bg-neon-red rounded-full animate-ping" />}
+                 {!isChatOpen && <span className="absolute top-1 right-1 w-2 h-2 bg-neon-red rounded-full animate-ping" />}
             </button>
-                </div>
+          </div>
             </div>
       </header>
               
