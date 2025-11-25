@@ -18,7 +18,8 @@ type EvidencePhoto = {
   caption: string;
   title?: string;
   description?: string;
-  gallery?: string[]; // New field
+  gallery?: string[];
+  video_url?: string;
   created_at: string;
 };
 

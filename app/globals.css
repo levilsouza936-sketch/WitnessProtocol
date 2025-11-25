@@ -1,41 +1,35 @@
 @import "tailwindcss";
 
-@theme {
+:root {
   --color-neon-red: #ff003c;
   --color-blood-red: #8a0000;
   --color-void-black: #050505;
   --color-off-white: #f0f0f0;
-
-  --font-mono: 'Courier New', Courier, monospace;
   --font-sans: 'Inter', sans-serif;
-
   --animate-glitch: glitch 1s infinite;
-  --animate-pulse-fast: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
 
-  @keyframes glitch {
-    0% {
-      transform: translate(0);
-    }
+@keyframes glitch {
 
-    20% {
-      transform: translate(-2px, 2px);
-    }
+  0%,
+  100% {
+    transform: translate(0);
+  }
 
-    40% {
-      transform: translate(-2px, -2px);
-    }
+  20% {
+    transform: translate(-2px, 2px);
+  }
 
-    60% {
-      transform: translate(2px, 2px);
-    }
+  40% {
+    transform: translate(-2px, -2px);
+  }
 
-    80% {
-      transform: translate(2px, -2px);
-    }
+  60% {
+    transform: translate(2px, 2px);
+  }
 
-    100% {
-      transform: translate(0);
-    }
+  80% {
+    transform: translate(2px, -2px);
   }
 }
 
